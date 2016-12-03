@@ -16,7 +16,32 @@
 int main(void)
 {
 	// Store Thermo Data
+	// Needs to determine timestamp
+	// if data is from thermo
+	// {
+	//		FILE* fp;
+	//		fp = fopen('thermodata.txt", "w");
+	//		int data = // recieved data
+	//		int len = 2 + data / 10
+	//		char* str = malloc(sizeof(*str) * len);
+	//		sprintf(str, "%d\n", data);
+	//		fwrite(str, 1, sizeof(str), fp);
+	//		fclose(fp);
+	//	}
+	
 	// Store Wheel Speed, send timestamp
+	// Needs to determine wheel and timestamp
+	// if data is from wheel
+	// {
+	//		FILE* fp;
+	//		fp = fopen('wheeldata.txt", "w");
+	//		int data = // recieved data
+	//		int len = 2 + data / 10
+	//		char* str = malloc(sizeof(*str) * len);
+	//		sprintf(str, "%d\n", data);
+	//		fwrite(str, 1, sizeof(str), fp);
+	//		fclose(fp);
+	//	}
 	
 	if(LAUNCHMODE == 1)
 	{
@@ -36,7 +61,8 @@ int main(void)
 		if(torqB > torqF * 1.05)
 		{
 			SLIPFLAG = 1;
-			THROTTLE = 0.5;
+			THROTTLE = (torqB - torqF) / torqF;
+			// Testing required for value
 			return EXIT_SUCCESS;
 		}
 		
