@@ -1,92 +1,187 @@
-/********************************************************           
-    * Main Module Program - Pedal Box: 					   *   
-    *                                                      *   
-    * Author:  Kai Strubel                                 *   
-    *                                                      *   
-    * Purpose:  Takes inputs from Pedal box 		       *   
-    *           Sets throttle level			               *   
-	*			handles safety checks 					   *
-    ********************************************************/  
+/***************************************************************************
+*
+*     File Information
+*
+*     Name of File: mainModulePedalBox.c
+*
+*     Authors (Include Email):
+*       1. Kai Strubel       kstrubel@purdue.edu
+*
+*     File dependents: (header files, flow charts, referenced documentation)
+*       1.
+*
+*     File Description: Takes inputs from the pedal box,
+*       handles safety checks, and sets throttle level
+*
+***************************************************************************/
+#define MAX_BRAKE_LEVEL 42.42424242 // BOGUS VALUE
+#define MAX_THROTTLE_LEVEL 42.42424242 // BOGUS VALUE
+#define LC_THRESHOLD 10 // BOGUS VALUE
+xQueueHandle Global_Queue_Handle = 0; 
+
+typedef struct _pedalbox_msg {
+   bool EOR;
+   bool APPS_Implausible;
+   float throttle_level;
+   float brake_level;
+   
+} Pedalbox_msg_t;
 	
-int mainModulePedalBoxMessageHandler(int brake_level, int throttle_level) {
-	// Inputs:
-	//		brake_level from pedalbox potentiometer
-	//		throttle_level from pedalbox potentiometer
-	// 		current time
-	// 		EOR flag
-	//		APPS_Implausible flag
-	// Global Variables:
-	// 		torque
-	//		brake_flage
-	// 		MMPB_TIME time this function was last run
-	// Constants:
-	//		timeout - time for CAN tx to timeout
-	// set function time stamp
-	MMPB_TIME = current_time;
-	if (EOR) { 
-		torque = 0;
-		// send CAN message to motor, set to Low Power State
+int pedalBoxMsgHandler() {
+/***************************************************************************
+*
+*     Function Information
+*
+*     Name of Function: pedalBoxMessageHandler
+*
+*     Programmer's Name: Kai Strubel
+*
+*     Function Return Type: int
+*
+*     Parameters (list data type, name, and comment one per line):
+*       1.Pedalbox_msg_t msg 
+			brake_level from pedalbox potentiometer
+*			throttle_level from pedalbox potentiometer
+*			APPS_Implausible flag
+*			EOR flag
+*		2.
+*       
+*      Global Dependents:
+*	    1.torque
+*		2.brake_flag
+*		3.MMPB_TIME time this function was last run 
+*		4.current_time
+*		5.Gloabal_Queue_Handle
+*
+*     Function Description:
+*			Takes input from pedal box, runs safetly check, sets torque
+***************************************************************************/
+	while (1) {
+		Pedalbox_msg_t msg;
+
+		if(xQueueReceive(Gloabal_Queue_Handle, &msg, 1000)){
+			// set function time stamp
+			MMPB_TIME = current_time;
+
+			if (msg.EOR) { 
+				torque = 0;
+				// send CAN message to motor, set to Low Power State
+				// sendMotorMessage();
+
+				// Set Pin ? to high
+				/* TODO */
+				continue;
+			} 
+			if (msg.APPS_Implausible) {
+				torque = 0;
+				continue;
+			}
+			if (msg.brake_level > 0.05*MAX_BRAKE_LEVEL) {
+				// signal LV to turn on break light
+				HAL_CAN_TRANSMIT()
+				/* TODO */
+
+				if (msg.throttle_level > 0.25 * MAX_THROTTLE_LEVEL) {
+					brake_flag = true;
+				}
+			}
+
+			if (brake_flag) {
+				if(msg.throttle_level > 0.05 * MAX_THROTTLE_LEVEL){
+					torque = 0;
+					continue;
+				}
+				brake_flag = false;
+			}
+
+			// set throttle
+			torque = throttle_level;
+
+			continue;	
+		}
+	}
+		
+	
+
+}
+
+int mainModuleIdle() {
+/***************************************************************************
+*
+*     Function Information
+*
+*     Name of Function: mainModuleIdle
+*
+*     Programmer's Name: Kai Strubel
+*
+*     Function Return Type: int
+*
+*     Parameters (list data type, name, and comment one per line):
+*       1.
+*       
+*      Global Dependents:
+*	    1.bool launchControl
+*		2.float apps_max
+*		3.float MMPB_TIME time pedal box message handler function was last run 
+*		4.float MMWM_TIME time wheel module handler function was last run
+*		5.float torque
+*		6.float scale factor
+*		7.float currentTime
+*
+*     Function Description:
+*		Idle function for main module, checks that other functions are 
+*		being run, 
+***************************************************************************/
+	while(1) {
+
+		if (launchControl) {
+			if(torque > apps_max) {
+				// apps - accelerator pedal position system
+				// bse - breake system encoder
+				apps_max = torque;
+				torque *= scaleFactor;
+				sendMotorMessage;
+				continue;
+			}
+			else {
+				if (apps_max - torque > LC_THRESHOLD) {
+					launchControl = false;
+				}
+				else {
+					torque *= scaleFactor;
+					sendMotorMessage;
+					continue;
+				}
+			}
+			
+		}
+
+		if (currentTime - MMPB_TIME > LC_THRESHOLD) {
+			torque = 0;
+			// low power state?
+			// error
+		}
+
+		if (currentTime - MMWM_TIME > LC_THRESHOLD) {
+			launchControl = 0;
+			//error
+		}
+
 		sendMotorMessage();
 
-		// Set Pin ? to high
-		/* TODO */
-		return NULL;
-	} 
-	if (APPS_Implausible) {
-		torque = 0;
-		return NULL;
+		vTaskDelay(1000);
 	}
-	if (brake_level > 5%) {
-		// signal LV to turn on break light
-		HAL_CAN_TRANSMIT()
-		/* TODO */
-		if (throttle_level > 25%) {
-			brake_flag = true;
-		}
-	}
-	if (brake_flag) {
-		if(throttle > 5%){
-			torque = 0;
-			return NULL;
-		}
-		brake_flag = false;
-	}
-
-	// set throttle
-	torque = throttle_level;
-
-	return 1;
-
 }
 
-int sendMotorMessage () {
-		// used to send CAN message to motor
-	
-		CAN_HandleTypeDef messageStructure;
-		CanTxMsgTypeDef message;
-		// Fills out messageStructure fields
-		/*
-			CAN_TypeDef * Instance // is register of base address
-			CAN_InitTypeDef Init // CAN required parameters
-		*/
-		messageStructure.CanTxMsgTypeDef = &message; // pointer to transmit structure
-		messageStructure.CanRxMsgTypeDef = NULL; // pointer to receive structre
-		/*
-			__IO HAL_CAN_StateTypeDef State // Can communication state
-			HAL_LockTypeDef Lock
-			__IO uint32_t ErrorCode
-		*/
-		
-		// Fills out message structure
-		/*
-		message.StdId = ;
-		message.ExtId = ;
-		message.IDE = ;
-		message.RTR = ;
-		message.DLC = ;
-		message.Data = ;
-		*/
-		HAL_CAN_TRANSMIT(&messageStructure, Timeout);
+int main(void) {
+	Gloabal_Queue_Handle = xQueueCreate(3, sizeof(Pedalbox_msg_t));
 
-		return 1;
-}
+	/* Create Tasks */
+	xTaskCreate(pedalBoxMsgHandler, (signed char*) "pedalBoxMsgHandler", 1024, NULL, 1, NULL);
+	xTaskCreate(mainModuleIdle, (signed char*) "mainModuleIdle", 1024, NULL, 1, NULL);
+
+	vTaskStartScheduler();
+
+	return 0;
+
+ }
