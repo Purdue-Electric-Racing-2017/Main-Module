@@ -1,158 +1,350 @@
-/**
-  ******************************************************************************
-  * File Name          : wheel_control.c
-  * Description        : Process Data from Wheel Module
-  ******************************************************************************
-  */
-/* Includes ------------------------------------------------------------------*/
-#include "main.h"
-#include "stm32f7xx_hal.h"
-#include "can.h"
-#include "dac.h"
-#include "gpio.h"
-// Essential Libraries: stdio, stdlib, string, time
+/***************************************************************************
+*
+*     File Information
+*
+*     Name of File: wheel_control.c
+*
+*     Authors (Include Email):
+*       1. Raymond Dong			dong155@purdue.edu
+*
+*     File dependents: (header files, flow charts, referenced documentation)
+*       1. wheel_control.h
+*
+*     File Description: 
+*		Records Wheel Thermo and Speed data. 
+*		Handles launch control.
+*
+***************************************************************************/
 
-/* Constants -----------------------------------------------------------------*/
-#THERMO_NUM_ROW 				4	// Number of Rows from Thermo Data
-#THERMO_NUM_COL 				16	// Number of Columns from Thermo Data
-#THERMO_NUM_DATA 				64	// Number of Data from Thermo Data
-#THERMO_NUM_CHAR 				512	// Number of Char to Record
-#THERMO_MAX_CHAR_PER_ELEM	 	8	// Max Number of Char per Element to Record
-#THERMO_MAX_CHAR_PER_BYTE 		3	// Max Number of Char per Byte to Record
+#include "wheel_control.h"
 
-/* Function Declarations -----------------------------------------------------*/
+/***************************************************************************
+*
+*     Function Information
+*
+*     Name of Function: strdup
+*
+*     Programmer's Name: Raymond Dong
+*
+*     Function Return Type: char*
+*
+*     Parameters (list data type, name, and comment one per line):
+*		1. char* msg					// Message to Duplicate
+*
+*     Global Dependents:
+*
+*     Function Description:
+*		Duplicate String
+*
+***************************************************************************/
 
-int main(void)
+char* strdup(char* msg)
 {
-	// Store Thermo Data
-	if ()
+	return strcpy(malloc(sizeof(*msg) * (strlen(msg) + 1)), msg);
+}
+
+/***************************************************************************
+*
+*     Function Information
+*
+*     Name of Function: thermo
+*
+*     Programmer's Name: Raymond Dong
+*
+*     Function Return Type: void
+*
+*     Parameters (list data type, name, and comment one per line):
+*		1. char** error					// Error Handling
+*		2. int wheel_num				// Wheel Number
+*		3. double* thermo_array			// Array of thermo data
+*
+*     Global Dependents:
+*
+*     Function Description:
+*		Stores Thermo data
+*
+***************************************************************************/
+
+void thermo(char** error, int wheel_num, double* thermo_array)
+{
+	// Check if Error Exists Beforehand
+	if(*error != NULL)
 	{
-		time_t currrent;
-		if(current == (time_t - 1))
+		return;
+	}
+	
+	// Gather Current Time
+	time_t currrent;
+	if(current == (time_t - 1))
+	{
+		if(*error == NULL)
 		{
-/* Error Handle --------------------------------------------------------------*/
-			return EXIT_FAILURE;
+			char* msg = "Failure to Obtain Current Time.";
+			*error = strdup(msg);
 		}
-		
-		FILE* fp;
-		fp = fopen('thermodata.txt", "w");
-		if(fp == NULL)
-		{
-/* Error Handle --------------------------------------------------------------*/
-			return EXIT_FAILURE;
-		}
-		
-		char* time_s = ctime(&current);
-		if(time_s == NULL)
-		{
-/* Error Handle --------------------------------------------------------------*/
-			return EXIT_FAILURE;
-		}
-		fwrite(time_s, 1, sizeof(*time_s), fp);
-		
-		char dest[THERMO_NUM_CHAR];
-/* Incomplete ----------------------------------------------------------------*/
-		int data[THERMO_NUM_DATA] = ;
-/* ---------------------------------------------------------------------------*/
-		
-		for(int i = 0; i < THERMO_NUM_ROW; i++)
-		{
-			for(int j = 0; j < THERMO_NUM_COL; j++)
+		return;
+	}
+	
+	// Determine which File to Write
+	switch(wheel_num)
+	{
+		case 1:
+			char* file_name = "Thermo_Wheel_1.txt";
+			break;
+		case 2
+			char* file_name = "Thermo_Wheel_2.txt";
+			break;
+		case 3
+			char* file_name = "Thermo_Wheel_3.txt";
+			break;
+		case 4
+			char* file_name = "Thermo_Wheel_4.txt";
+			break;
+		default:
+			if(*error == NULL)
 			{
-				char src[THERMO_MAX_CHAR_PER_ELEM];
-				char left_string[THERMO_MAX_CHAR_PER_BYTE];
-				char right_string[THERMO_MAX_CHAR_PER_BYTE];
-				
-				// Divide Left and Right Side of Decimal
-				int left = data[j + i * THERMO_NUM_COL] / 1000;
-				int right = data[j + i * THERMO_NUM_COL] % 1000;
-				
-				// Convert to String
-				if(right < 10)
-				{
-					sprintf(right_string, "%d  ", right);
-				}
-				else if(right < 100)
-				{
-					sprintf(right_string, "%d ", right);
-				}
-				else
-				{
-					sprintf(right_string, "%d", right);
-				}
-				
-				// Convert to String
-				if(left < 10)
-				{
-					sprintf(left_string, "%d  ", left);
-				}
-				else if(right < 100)
-				{
-					sprintf(left_string, "%d ", left);
-				}
-				else
-				{
-					sprintf(left_string, "%d", left);
-				}
-				
-				// Combine Strings
-				if(j < THERMO_NUM_COL - 1)
-				{
-					sprintf(src, "%s.%s\t", left_string, right_string);
-				}
-				else
-				{
-					sprintf(src, "%s.%s\n", left_string, right_string);
-				}
-				strcat(dest, src);
+				char* msg = "Invalid Wheel Number.";
+				*error = strdup(msg);
 			}
-		}
-		
-		// Record Data
-		fwrite(dest, 1, THERMO_NUM_CHAR, fp);
-		fclose(fp);
+			return;
 	}
 	
-	// Store Wheel Speed, send timestamp
-	// Needs to determine wheel and timestamp
-	// if data is from wheel
-	// {
-	//		FILE* fp;
-	//		fp = fopen('wheeldata.txt", "w");
-	//		int data = // recieved data
-	//		int len = 2 + data / 10
-	//		char* str = malloc(sizeof(*str) * len);
-	//		sprintf(str, "%d\n", data);
-	//		fwrite(str, 1, sizeof(str), fp);
-	//		fclose(fp);
-	//	}
-	
-	if(LAUNCHMODE == 1)
+	// Open File
+	FILE* fp;
+	fp = fopen(file_name, "w");
+	if(fp == NULL)
 	{
-		// Front Wheel Torque
-		int torq1;
-		int torq2;
-		
-		// Back Wheel Torque
-		int torq3;
-		int torq4;
-		
-		// Average Front and Back
-		int torqF = (torq1 + torq2) / 2;
-		int torqB = (torq3 + torq4) / 2;
-		
-		// Check for Slip
-		if(torqB > torqF * 1.05)
+		if(*error == NULL)
 		{
-			SLIPFLAG = 1;
-			THROTTLE = (torqB - torqF) / torqF;
-			// Testing required for value
-			return EXIT_SUCCESS;
+			char* msg = "Failure to Open File.";
+			*error = strdup(msg);
 		}
-		
-		// Reset Constants
-		SLIPFLAG = 0;
-		THROTTLE = 1;
+		return;
 	}
-	return EXIT_SUCCESS;
+	
+	// Gather Timestamp and Write
+	char* time_s = ctime(&current);
+	if(time_s == NULL)
+	{
+		if(*error == NULL)
+		{
+			char* msg = "Failure to Obtain Timestamp.";
+			*error = strdup(msg);
+		}
+		return;
+	}
+	fwrite(time_s, 1, sizeof(*time_s), fp);
+	
+	// Convert Data to String
+	char dest[THERMO_NUM_CHAR];
+	double data[THERMO_NUM_DATA] = thermo_array;
+	for(int i = 0; i < THERMO_NUM_ROW; i++)
+	{
+		for(int j = 0; j < THERMO_NUM_COL; j++)
+		{
+			char src[THERMO_MAX_CHAR_PER_ELEM];
+			char left_string[THERMO_MAX_CHAR_PER_BYTE];
+			char right_string[THERMO_MAX_CHAR_PER_BYTE];
+			
+			// Divide Left and Right Side of Decimal
+			int left = data[j + i * THERMO_NUM_COL] / 1000;
+			int right = data[j + i * THERMO_NUM_COL] % 1000;
+				
+			// Convert to String
+			if(right < 10)
+			{
+				sprintf(right_string, "%d  ", right);
+			}
+			else if(right < 100)
+			{
+				sprintf(right_string, "%d ", right);
+			}
+			else
+			{
+				sprintf(right_string, "%d", right);
+			}
+				
+			// Convert to String
+			if(left < 10)
+			{
+				sprintf(left_string, "%d  ", left);
+			}
+			else if(right < 100)
+			{
+				sprintf(left_string, "%d ", left);
+			}
+			else
+			{
+				sprintf(left_string, "%d", left);
+			}
+				
+			// Combine Strings
+			if(j < THERMO_NUM_COL - 1)
+			{
+				sprintf(src, "%s.%s\t", left_string, right_string);
+			}
+			else
+			{
+				sprintf(src, "%s.%s\n", left_string, right_string);
+			}
+			strcat(dest, src);
+		}
+	}
+		
+	// Record Data
+	fwrite(dest, 1, THERMO_NUM_CHAR, fp);
+	fclose(fp);
+	return;
+}
+
+/***************************************************************************
+*
+*     Function Information
+*
+*     Name of Function: speed
+*
+*     Programmer's Name: Raymond Dong
+*
+*     Function Return Type: void
+*
+*     Parameters (list data type, name, and comment one per line):
+*		1. char** error					// Error Handling
+*		2. int wheel_num				// Wheel Number
+*		3. double wheel_speed			// Wheel Speed (rad / sec)
+*
+*     Global Dependents:
+*
+*     Function Description:
+*		Stores Speed data
+*
+***************************************************************************/
+
+void speed(char** error, int wheel_num, double wheel_speed)
+{
+	// Check if Error Exists Beforehand
+	if(*error != NULL)
+	{
+		return;
+	}
+	
+	// Gather Current Time
+	time_t currrent;
+	if(current == (time_t - 1))
+	{
+		if(*error == NULL)
+		{
+			char* msg = "Failure to Obtain Current Time.";
+			*error = strdup(msg);
+		}
+		return;
+	}
+	
+	// Determine which File to Write
+	switch(wheel_num)
+	{
+		case 1:
+			char* file_name = "Speed_Wheel_1.txt";
+			break;
+		case 2
+			char* file_name = "Speed_Wheel_2.txt";
+			break;
+		case 3
+			char* file_name = "Speed_Wheel_3.txt";
+			break;
+		case 4
+			char* file_name = "Speed_Wheel_4.txt";
+			break;
+		default:
+			if(*error == NULL)
+			{
+				char* msg = "Invalid Wheel Number.";
+				*error = strdup(msg);
+			}
+			return;
+	}
+	
+	// Open File
+	FILE* fp;
+	fp = fopen(file_name, "w");
+	if(fp == NULL)
+	{
+		if(*error == NULL)
+		{
+			char* msg = "Failure to Open File.";
+			*error = strdup(msg);
+		}
+		return;
+	}
+	
+	// Gather Timestamp and Write
+	char* time_s = ctime(&current);
+	if(time_s == NULL)
+	{
+		if(*error == NULL)
+		{
+			char* msg = "Failure to Obtain Timestamp.";
+			*error = strdup(msg);
+		}
+		return;
+	}
+	fwrite(time_s, 1, sizeof(*time_s), fp);
+	
+	// Convert Data to String
+	char src[SPEED_MAX_CHAR];
+	sprintf("%f\n", wheel_speed);
+	
+	// Record Data
+	fwrite(dest, 1, SPEED_MAX_CHAR, fp);
+	fclose(fp);
+	return;
+}
+
+/***************************************************************************
+*
+*     Function Information
+*
+*     Name of Function: launch
+*
+*     Programmer's Name: Raymond Dong
+*
+*     Function Return Type: void
+*
+*     Parameters (list data type, name, and comment one per line):
+*		1. char** error					// Error Handling
+*
+*     Global Dependents:
+*
+*     Function Description:
+*		Control Launch
+*
+***************************************************************************/
+
+void launch(char** error)
+{
+	/*
+	// Front Wheel Torque
+	int torq1;
+	int torq2;
+	
+	// Back Wheel Torque
+	int torq3;
+	int torq4;
+	
+	// Average Front and Back
+	int torqF = (torq1 + torq2) / 2;
+	int torqB = (torq3 + torq4) / 2;
+	
+	// Check for Slip
+	if(torqB > torqF * 1.05)
+	{
+		SLIPFLAG = 1;
+		THROTTLE = (torqB - torqF) / torqF;
+		// Testing required for value
+		return EXIT_SUCCESS;
+	}
+		
+	// Reset Constants
+	SLIPFLAG = 0;
+	THROTTLE = 1;
+	*/
 }
