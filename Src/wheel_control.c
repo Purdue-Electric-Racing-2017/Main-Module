@@ -211,6 +211,7 @@ void thermo(char** error, int wheel_num, double* thermo_array)
 *		1. char** error					// Error Handling
 *		2. int wheel_num				// Wheel Number
 *		3. double wheel_speed			// Wheel Speed (rad / sec)
+*		4. double* wheel_pointer		// Wheel Pointer
 *
 *     Global Dependents:
 *
@@ -219,7 +220,7 @@ void thermo(char** error, int wheel_num, double* thermo_array)
 *
 ***************************************************************************/
 
-void speed(char** error, int wheel_num, double wheel_speed)
+void speed(char** error, int wheel_num, double wheel_speed, double* wheel_pointer)
 {
 	// Check if Error Exists Beforehand
 	if(*error != NULL)
@@ -294,6 +295,7 @@ void speed(char** error, int wheel_num, double wheel_speed)
 	sprintf("%f\n", wheel_speed);
 	
 	// Record Data
+	wheel_pointer = wheel_speed;
 	fwrite(dest, 1, SPEED_MAX_CHAR, fp);
 	fclose(fp);
 	return;
@@ -303,7 +305,7 @@ void speed(char** error, int wheel_num, double wheel_speed)
 *
 *     Function Information
 *
-*     Name of Function: launch
+*     Name of Function: traction
 *
 *     Programmer's Name: Raymond Dong
 *
@@ -311,40 +313,29 @@ void speed(char** error, int wheel_num, double wheel_speed)
 *
 *     Parameters (list data type, name, and comment one per line):
 *		1. char** error					// Error Handling
+*		2. double* pointer1				// Wheel 1 Pointer
+*		3. double* pointer2				// Wheel 2 Pointer
+*		4. double* pointer3				// Wheel 3 Pointer
+*		5. double* pointer4				// Wheel 4 Pointer
+*		6. double* throttle				// Throttle Coefficent
 *
 *     Global Dependents:
 *
 *     Function Description:
-*		Control Launch
+*		Traction Control
 *
 ***************************************************************************/
 
-void launch(char** error)
+void traction(char** error, double* pointer1, double* pointer2, double* pointer3, double* pointer4, double* throttle)
 {
-	/*
-	// Front Wheel Torque
-	int torq1;
-	int torq2;
-	
-	// Back Wheel Torque
-	int torq3;
-	int torq4;
-	
 	// Average Front and Back
-	int torqF = (torq1 + torq2) / 2;
-	int torqB = (torq3 + torq4) / 2;
+	int front = (pointer1 + pointer2) / 2;
+	int back = (pointer3 + pointer4) / 2;
 	
 	// Check for Slip
-	if(torqB > torqF * 1.05)
+	if(back > (front * MAX_PERCENT_SLIP))
 	{
-		SLIPFLAG = 1;
-		THROTTLE = (torqB - torqF) / torqF;
-		// Testing required for value
-		return EXIT_SUCCESS;
+		throttle = (back - front) / front;
 	}
-		
-	// Reset Constants
-	SLIPFLAG = 0;
-	THROTTLE = 1;
 	*/
 }
