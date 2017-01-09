@@ -337,5 +337,4 @@ void traction(char** error, double* pointer1, double* pointer2, double* pointer3
 	{
 		throttle = (back - front) / front;
 	}
-	*/
 }
